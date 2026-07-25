@@ -62,7 +62,7 @@ export default function RootLayout({
       lang="tr"
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-screen flex-col">
         <OneSignalProvider>
           <AppShell>{children}</AppShell>
         </OneSignalProvider>
