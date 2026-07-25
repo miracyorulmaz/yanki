@@ -1,0 +1,128 @@
+[
+  {
+    "category": "onboarding",
+    "questions": [
+      { "id": "onb_001", "type": "open_text", "text": "Kendini üç kelimeyle tanımlasan, hangi üç kelimeyi seçerdin?", "weight": 0.9, "dimensions": ["identity"], "refreshable": false },
+      { "id": "onb_002", "type": "open_text", "text": "Hayatındaki en önemli 3 kişi kim, neden?", "weight": 0.85, "dimensions": ["attachment"], "refreshable": false },
+      { "id": "onb_003", "type": "open_text", "text": "Seni gerçekten tanıyan biri, seni nasıl anlatır?", "weight": 0.9, "dimensions": ["identity", "self_perception"], "refreshable": false },
+      { "id": "onb_004", "type": "open_text", "text": "Hayattaki amacını bir cümleyle özetlesen ne derdin?", "weight": 0.9, "dimensions": ["values", "purpose"], "refreshable": false },
+      { "id": "onb_005", "type": "open_text", "text": "Bir kararı verirken en çok neye bakarsın — mantığa mı, hislerine mi, başkalarının fikrine mi?", "weight": 0.8, "dimensions": ["decision_making"], "refreshable": false },
+      { "id": "onb_006", "type": "multiple_choice", "text": "Sokakta içinde cüzdan olan bir çanta buldun. Ne yaparsın?", "options": ["Sahibine ulaştırmaya çalışırım", "Polise teslim ederim", "İçine bakarım", "Kararsız kalırım"], "weight": 0.75, "dimensions": ["ethics", "behavior"], "refreshable": false },
+      { "id": "onb_007", "type": "multiple_choice", "text": "En yakın arkadaşın büyük bir hata yaptı ve senden yardım istiyor. Ne yaparsın?", "options": ["Koşulsuz yanında olurum", "Önce hatayı yüzüne vururum, sonra yardım ederim", "Mesafe koyarım", "Duruma göre değişir"], "weight": 0.75, "dimensions": ["loyalty", "conflict_style"], "refreshable": false },
+      { "id": "onb_008", "type": "scaled", "text": "Riski ne kadar seversin? (1: hep güvenli yolu seçerim — 5: risk almadan yaşanmaz)", "weight": 0.6, "dimensions": ["risk_tolerance"], "refreshable": false },
+      { "id": "onb_009", "type": "open_text", "text": "Seni en çok kim/ne motive eder?", "weight": 0.7, "dimensions": ["motivation"], "refreshable": false },
+      { "id": "onb_010", "type": "open_text", "text": "En büyük korkun nedir?", "weight": 0.85, "dimensions": ["fears"], "refreshable": false },
+      { "id": "onb_011", "type": "multiple_choice", "text": "Zor bir gün geçirdiğinde ne yaparsın?", "options": ["Yalnız kalıp düşünürüm", "Birine anlatırım", "Kendimi bir işe/hobiye verip dağıtırım", "Görmezden gelip devam ederim"], "weight": 0.65, "dimensions": ["coping_style"], "refreshable": false },
+      { "id": "onb_012", "type": "open_text", "text": "Mizah anlayışını nasıl tarif edersin?", "weight": 0.7, "dimensions": ["communication_tone"], "refreshable": false },
+      { "id": "onb_013", "type": "scaled", "text": "Değişime ne kadar açıksın? (1: rutinimi severim — 5: yeniliği severim)", "weight": 0.55, "dimensions": ["openness"], "refreshable": false },
+      { "id": "onb_014", "type": "open_text", "text": "En çok pişman olduğun şey nedir?", "weight": 0.8, "dimensions": ["regrets"], "refreshable": false },
+      { "id": "onb_015", "type": "multiple_choice", "text": "Bir tartışmada genelde ne yaparsın?", "options": ["Haklı olsam bile geri adım atarım", "Sonuna kadar savunurum", "Ortak noktayı ararım", "Tartışmadan kaçarım"], "weight": 0.7, "dimensions": ["conflict_style"], "refreshable": false },
+      { "id": "onb_016", "type": "open_text", "text": "Sana göre iyi bir hayat neye benzer?", "weight": 0.75, "dimensions": ["values"], "refreshable": false },
+      { "id": "onb_017", "type": "open_text", "text": "İnsanların senin hakkında yanlış anladığını düşündüğün bir şey var mı?", "weight": 0.9, "dimensions": ["self_perception", "identity"], "refreshable": false },
+      { "id": "onb_018", "type": "open_text", "text": "Gelecekteki kendine tek bir tavsiye bırakacak olsan ne yazardın?", "weight": 0.85, "dimensions": ["values", "purpose"], "refreshable": false },
+      { "id": "onb_019", "type": "open_text", "text": "En çok hangi özelliğinle hatırlanmak istersin?", "weight": 0.8, "dimensions": ["values", "identity"], "refreshable": false },
+      { "id": "onb_020", "type": "open_text", "text": "Şu an hayatında en çok neyle uğraşıyorsun (kafanı en çok ne meşgul ediyor)?", "weight": 0.6, "dimensions": ["current_state"], "refreshable": false }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "ilişkiler",
+    "questions": [
+      { "id": "daily_rel_001", "type": "open_text", "text": "Bugün biriyle olan bir anın seni nasıl hissettirdi?", "dimensions": ["relationships"], "importance": "medium", "refreshable": true },
+      { "id": "daily_rel_002", "type": "scaled", "text": "Bugün kendini insanlara ne kadar yakın hissettin? (1-5)", "dimensions": ["relationships"], "importance": "low", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "kariyer",
+    "questions": [
+      { "id": "daily_car_001", "type": "open_text", "text": "Bugün işle/okulla ilgili seni en çok ne düşündürdü?", "dimensions": ["career"], "importance": "medium", "refreshable": true },
+      { "id": "daily_car_002", "type": "multiple_choice", "text": "Bugün işindeki/okulundaki bir şey seni...", "options": ["Motive etti", "Yordu", "Sıktı", "Gururlandırdı"], "dimensions": ["career"], "importance": "low", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "aile",
+    "questions": [
+      { "id": "daily_fam_001", "type": "open_text", "text": "Ailenle ilgili bugün aklına gelen bir şey oldu mu?", "dimensions": ["family"], "importance": "medium", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "değerler",
+    "questions": [
+      { "id": "daily_val_001", "type": "open_text", "text": "Bugün bir değerinle (dürüstlük, adalet, sadakat vb.) çelişen bir şey yaşadın mı?", "dimensions": ["values"], "importance": "medium", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "stres",
+    "questions": [
+      { "id": "daily_str_001", "type": "open_text", "text": "Bugün seni en çok geren şey neydi?", "dimensions": ["stress"], "importance": "medium", "refreshable": true },
+      { "id": "daily_str_002", "type": "scaled", "text": "Bugünkü stres seviyen neydi? (1-5)", "dimensions": ["stress"], "importance": "high", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "mutluluk",
+    "questions": [
+      { "id": "daily_hap_001", "type": "open_text", "text": "Bugün seni gülümseten bir şey oldu mu?", "dimensions": ["happiness"], "importance": "medium", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "kararlar",
+    "questions": [
+      { "id": "daily_dec_001", "type": "open_text", "text": "Bugün verdiğin bir karar var mı, neden öyle karar verdin?", "dimensions": ["decision_making"], "importance": "medium", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "pişmanlıklar",
+    "questions": [
+      { "id": "daily_reg_001", "type": "open_text", "text": "Bugün farklı yapmak isteyeceğin bir şey oldu mu?", "dimensions": ["regrets"], "importance": "low", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "güncel_olay",
+    "questions": [
+      { "id": "daily_cur_001", "type": "open_text", "text": "Bugün dikkatini çeken bir olay oldu mu?", "dimensions": ["current_events"], "importance": "low", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "başarı",
+    "questions": [
+      { "id": "daily_ach_001", "type": "open_text", "text": "Bugün kendinle gurur duyduğun bir şey oldu mu?", "dimensions": ["achievement"], "importance": "medium", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "sağlık",
+    "questions": [
+      { "id": "daily_hea_001", "type": "open_text", "text": "Bugün bedenin sana ne söyledi?", "dimensions": ["wellbeing"], "importance": "low", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "öğrenme",
+    "questions": [
+      { "id": "daily_lea_001", "type": "open_text", "text": "Bugün yeni öğrendiğin bir şey var mı?", "dimensions": ["curiosity"], "importance": "low", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "minnettarlık",
+    "questions": [
+      { "id": "daily_gra_001", "type": "open_text", "text": "Bugün ne için minnettarsın?", "dimensions": ["gratitude"], "importance": "medium", "refreshable": true }
+    ]
+  },
+  {
+    "category": "daily",
+    "tag": "gelecek",
+    "questions": [
+      { "id": "daily_fut_001", "type": "open_text", "text": "Şu an en çok heyecanlandığın şey ne?", "dimensions": ["future_orientation"], "importance": "medium", "refreshable": true }
+    ]
+  }
+]

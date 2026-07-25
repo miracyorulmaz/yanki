@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yankı — Kendini zaman içinde duymanın bir yolu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: #0d1017;
+    --surface: #151924;
+    --surface-light: #1d2230;
+    --primary: #8b7cff;
+    --primary-soft: rgba(139, 124, 255, 0.14);
+    --secondary: #d2a96f;
+    --text: #f1f0ed;
+    --muted: #9298a8;
+    --border: rgba(255, 255, 255, 0.08);
+    --danger: #e08a8a;
+
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    --radius-s: 10px;
+    --radius-m: 14px;
+    --radius-l: 20px;
+
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { color-scheme: dark; }
+
+  body {
+    background: var(--background);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* ---------- ambient background ---------- */
+  .ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .ambient span { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.10; animation: drift 42s ease-in-out infinite; }
+  .ambient span:nth-child(1) { width: 520px; height: 520px; background: var(--primary); top: -120px; left: -100px; }
+  .ambient span:nth-child(2) { width: 460px; height: 460px; background: #5c7cff; bottom: -160px; right: -80px; animation-delay: -20s; }
+  @keyframes drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30px, -20px) scale(1.06); } }
+
+  a, button { font-family: inherit; }
+  button { cursor: pointer; border: none; background: none; color: inherit; }
+  button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  ::selection { background: var(--primary-soft); color: var(--text); }
+
+  /* ---------- app shell ---------- */
+  .app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+  /* ---------- sidebar ---------- */
+  .sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .wordmark { display: flex; flex-direction: column; gap: 10px; margin-bottom: 34px; padding: 0 4px; }
+  .wordmark-row { display: flex; align-items: center; gap: 10px; }
+  .wordmark-mark path { stroke: var(--primary); stroke-width: 1.6; fill: none; stroke-linecap: round; }
+  .wordmark-mark path.wave-2 { stroke: var(--secondary); opacity: 0.8; }
+  .wordmark-title { font-family: var(--font-display); font-size: 21px; font-weight: 500; letter-spacing: 0.06em; }
+  .wordmark-tagline { font-size: 12.5px; color: var(--muted); line-height: 1.5; max-width: 190px; }
+
+  .nav-list { list-style: none; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+    padding: 11px 12px; border-radius: var(--radius-s);
+    color: var(--muted); font-size: 14.5px;
+    transition: background 0.25s var(--ease), color 0.25s var(--ease);
+    text-align: left;
+  }
+  .nav-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.6; flex-shrink: 0; }
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .nav-item[aria-selected="true"] { background: var(--primary-soft); color: var(--text); }
+  .nav-item[aria-selected="true"] svg { stroke: var(--primary); }
+
+  .sidebar-footer { border-top: 1px solid var(--border); padding-top: 16px; display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--primary-soft); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 14px; flex-shrink: 0;
+  }
+  .sidebar-footer .name { font-size: 13.5px; font-weight: 500; }
+  .sidebar-footer .meta { font-size: 12px; color: var(--muted); }
+
+  /* ---------- main content ---------- */
+  .main { flex: 1; min-width: 0; padding: 40px 48px 100px; }
+  .mobile-topbar { display: none; }
+
+  .panel { max-width: 760px; margin: 0 auto; }
+  .panel.active { animation: fade-in 0.4s var(--ease); }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 30px; }
+  .page-title { font-family: var(--font-display); font-size: 28px; font-weight: 500; letter-spacing: 0.01em; }
+  .page-sub { color: var(--muted); font-size: 14.5px; margin-top: 6px; max-width: 480px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    padding: 26px;
+    transition: transform 0.35s var(--ease), border-color 0.35s var(--ease);
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.14); }
+
+  /* soft shimmer used on successful save */
+  .card.shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 35%, rgba(139,124,255,0.16) 50%, transparent 65%);
+    background-size: 220% 100%;
+    background-position: 140% 0;
+    animation: shimmer-sweep 1.1s var(--ease);
+    pointer-events: none;
+  }
+  @keyframes shimmer-sweep { from { background-position: 140% 0; } to { background-position: -40% 0; } }
+
+  /* ---------- Bugün ---------- */
+  .today-header { margin-bottom: 26px; }
+  .today-date { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .today-greeting { font-family: var(--font-display); font-size: 27px; font-weight: 500; margin-bottom: 6px; }
+  .today-prompt { color: var(--muted); font-size: 15px; }
+
+  .question-card { margin-bottom: 22px; }
+  .question-label { font-size: 13px; color: var(--secondary); letter-spacing: 0.02em; margin-bottom: 10px; }
+  .question-text { font-family: var(--font-display); font-size: 20px; font-weight: 500; margin-bottom: 18px; line-height: 1.45; }
+
+  textarea.journal {
+    width: 100%;
+    min-height: 120px;
+    resize: none;
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-m);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    line-height: 1.6;
+    padding: 16px 18px;
+    transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
+    overflow: hidden;
+  }
+  textarea.journal::placeholder { color: var(--muted); }
+  textarea.journal:focus { border-color: var(--primary); background: rgba(139,124,255,0.05); outline: none; }
+  textarea.journal.invalid { border-color: rgba(224,138,138,0.55); }
+
+  .field-hint {
+    font-size: 12.5px;
+    color: var(--danger);
+    margin-top: 9px;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s var(--ease), opacity 0.3s var(--ease), margin-top 0.3s var(--ease);
+  }
+  .field-hint.show { max-height: 30px; opacity: 1; margin-top: 9px; }
+
+  .question-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .btn {
+    padding: 11px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.25s var(--ease), transform 0.15s var(--ease), opacity 0.2s;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: #12121a; }
+  .btn-primary:hover { background: #9a8dff; }
+  .btn-primary.is-disabled { opacity: 0.45; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.18); }
+
+  .btn .spinner {
+    width: 13px; height: 13px; border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.25);
+    border-top-color: rgba(0,0,0,0.65);
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .btn.loading .spinner { display: inline-block; }
+  .btn.loading .btn-text { opacity: 0.7; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .saved-toast {
+    display: flex; align-items: center; gap: 10px; margin-top: 14px;
+    color: var(--secondary); font-size: 14px;
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+  }
+  .saved-toast.show { opacity: 1; transform: translateY(0); }
+  .ripple { position: relative; width: 16px; height: 16px; }
+  .ripple::before, .ripple::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 1.4px solid var(--secondary); opacity: 0;
+  }
+  .saved-toast.show .ripple::before { animation: ripple 1.1s var(--ease); }
+  .saved-toast.show .ripple::after { animation: ripple 1.1s var(--ease) 0.2s; }
+  @keyframes ripple { from { transform: scale(0.3); opacity: 0.7; } to { transform: scale(2.6); opacity: 0; } }
+
+  .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 26px 0; }
+  .info-card h3 { font-size: 12.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px; }
+  .info-card p { font-size: 14.5px; line-height: 1.55; }
+  .info-card .meta { margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+  .journey-numbers { display: flex; gap: 18px; }
+  .journey-numbers div { text-align: left; }
+  .journey-numbers strong { display: block; font-family: var(--font-display); font-size: 22px; font-weight: 500; }
+  .journey-numbers span { font-size: 12px; color: var(--muted); }
+
+  .recent-section { margin-top: 34px; }
+  .recent-title { font-size: 13px; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .recent-row { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--border); font-size: 14px; }
+  .recent-row .recent-date { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+
+  /* ---------- Sohbet ---------- */
+  .chat-panel { display: flex; flex-direction: column; height: calc(100vh - 80px); max-width: 720px; }
+  .chat-scroll { flex: 1; overflow-y: auto; padding: 6px 2px 16px; display: flex; flex-direction: column; gap: 18px; }
+  .msg { max-width: 82%; animation: fade-in 0.35s var(--ease); }
+  .msg-user { align-self: flex-end; background: var(--primary-soft); border-radius: 16px 16px 4px 16px; padding: 12px 16px; font-size: 14.5px; white-space: pre-wrap; word-break: break-word; }
+  .msg-yanki { align-self: flex-start; }
+  .msg-yanki .bubble {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px 16px 16px 4px; padding: 14px 18px;
+    font-size: 14.5px; line-height: 1.65;
+  }
+  .msg-yanki .bubble p + p { margin-top: 10px; }
+  .memory-toggle {
+    margin-top: 8px; font-size: 12.5px; color: var(--muted);
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .memory-toggle:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .memory-toggle svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.6; transition: transform 0.25s var(--ease); }
+  .memory-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+  .memory-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease), margin-top 0.4s var(--ease); margin-top: 0; }
+  .memory-panel.open { max-height: 220px; margin-top: 10px; }
+  .memory-panel-inner { background: var(--surface-light); border: 1px solid var(--border); border-radius: var(--radius-m); padding: 14px 16px; font-size: 13.5px; }
+  .memory-panel-inner .memory-quote { color: var(--text); padding: 8px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+  .memory-panel-inner .memory-quote:last-of-type { border-bottom: none; }
+  .memory-panel-inner .memory-note { color: var(--muted); font-size: 12.5px; margin-top: 10px; }
+
+  .typing-indicator { display: flex; gap: 4px; padding: 14px 18px; }
+  .typing-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: typing 1.2s infinite ease-in-out; }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typing { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+  .chat-input-row { display: flex; gap: 10px; align-items: flex-end; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px; }
+  .chat-input-row textarea {
+    flex: 1; resize: none; background: var(--surface-light); border: 1px solid var(--border);
+    border-radius: 22px; color: var(--text); font-family: var(--font-body); font-size: 14.5px;
+    padding: 13px 18px; max-height: 140px;
+  }
+  .chat-input-row textarea::placeholder { color: var(--muted); }
+  .chat-input-row textarea:focus { border-color: var(--primary); outline: none; }
+  .send-btn {
+    width: 42px; height: 42px; border-radius: 50%; background: var(--primary); color: #12121a;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .send-btn:hover { background: #9a8dff; }
+  .send-btn:active { transform: scale(0.94); }
+  .send-btn svg { width: 17px; height: 17px; }
+
+  /* ---------- Hafızam ---------- */
+  .memory-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 24px; }
+  .search-input { flex: 1; min-width: 180px; background: var(--surface-light); border: 1px solid var(--border); border-radius: 999px; padding: 10px 16px; color: var(--text); font-size: 13.5px; }
+  .search-input::placeholder { color: var(--muted); }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+  .filter-chip { padding: 8px 15px; border-radius: 999px; font-size: 13px; color: var(--muted); border: 1px solid var(--border); transition: all 0.2s var(--ease); }
+  .filter-chip:hover { color: var(--text); }
+  .filter-chip[aria-pressed="true"] { background: var(--primary-soft); color: var(--text); border-color: transparent; }
+
+  .timeline { position: relative; padding-left: 22px; }
+  .timeline::before { content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: var(--border); }
+  .timeline-item {
+    position: relative; padding-bottom: 26px;
+    transition: opacity 0.35s var(--ease), max-height 0.35s var(--ease);
+  }
+  .timeline-item::before { content: ''; position: absolute; left: -22px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--background); }
+  .timeline-item.fading-out { opacity: 0; }
+  .timeline-item[hidden] { display: none; }
+  .memory-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); padding: 18px 20px; position: relative; }
+  .memory-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+  .memory-card .m-date { font-size: 12px; color: var(--muted); }
+  .memory-card .m-text { font-size: 14.5px; line-height: 1.55; margin: 8px 0 10px; }
+  .memory-card .m-tags { font-size: 12px; color: var(--secondary); }
+
+  .kebab { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); flex-shrink: 0; }
+  .kebab:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .kebab svg { width: 16px; height: 16px; }
+
+  .dropdown { position: relative; }
+  .dropdown-menu {
+    position: absolute; right: 0; top: 32px;
+    background: var(--surface-light); border: 1px solid var(--border);
+    border-radius: var(--radius-s); min-width: 190px; padding: 6px;
+    display: none; flex-direction: column; z-index: 30;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+  }
+  .dropdown-menu.open { display: flex; animation: fade-in 0.2s var(--ease); }
+  .dropdown-menu button { text-align: left; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--text); width: 100%; }
+  .dropdown-menu button:hover, .dropdown-menu button:focus-visible { background: rgba(255,255,255,0.05); }
+  .dropdown-menu button.danger { color: var(--danger); }
+
+  .empty-state { padding: 34px 10px; text-align: center; color: var(--muted); font-size: 14px; }
+
+  /* ---------- İçgörüler ---------- */
+  .insight-summary { color: var(--muted); font-size: 14.5px; margin-bottom: 26px; }
+  .insight-list { display: flex; flex-direction: column; gap: 16px; }
+  .insight-time { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; }
+  .insight-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .insight-title { font-family: var(--font-display); font-size: 17px; font-weight: 500; }
+  .confidence-tag { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); flex-shrink: 0; }
+  .insight-body p { font-size: 14.5px; line-height: 1.6; margin-bottom: 8px; }
+  .insight-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; }
+  .insight-footer .basis { font-size: 12.5px; color: var(--muted); }
+  .evidence-toggle { font-size: 13px; color: var(--primary); display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .evidence-toggle svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.6; transition: transform 0.25s var(--ease); }
+  .evidence-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .evidence-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease), margin-top 0.4s var(--ease); }
+  .evidence-panel.open { max-height: 200px; margin-top: 14px; }
+  .evidence-panel-inner { border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .evidence-quote { font-size: 13.5px; color: var(--muted); padding-left: 12px; border-left: 2px solid var(--border); line-height: 1.5; }
+
+  /* ---------- Benlik ---------- */
+  .self-section { margin-bottom: 30px; }
+  .self-section h3 { font-size: 12.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px; }
+  .value-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+  .value-tag { padding: 9px 16px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 13.5px; }
+  .self-section p.desc { font-size: 14.5px; line-height: 1.65; color: var(--text); }
+
+  .confidence-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); padding: 22px; }
+  .confidence-block > p.confidence-note { font-size: 13.5px; line-height: 1.55; color: var(--muted); margin-top: 16px; }
+
+  .stage-indicator { display: flex; align-items: flex-start; gap: 0; }
+  .stage {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    text-align: center; position: relative;
+  }
+  .stage-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--surface-light); border: 1.5px solid var(--border); transition: background 0.3s, border-color 0.3s; z-index: 1; }
+  .stage.active .stage-dot { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+  .stage-line {
+    position: absolute; top: 5px; left: -50%; width: 100%; height: 1.5px;
+    background: var(--border); z-index: 0;
+  }
+  .stage:first-child .stage-line { display: none; }
+  .stage-label { font-size: 12.5px; color: var(--muted); line-height: 1.4; max-width: 110px; }
+  .stage.active .stage-label { color: var(--text); font-weight: 500; }
+
+  /* ---------- Ayarlar ---------- */
+  .settings-group { margin-bottom: 30px; }
+  .settings-group h3 { font-size: 12.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+  .settings-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); overflow: hidden; }
+  .settings-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 20px; border-bottom: 1px solid var(--border);
+    font-size: 14.5px; gap: 14px; width: 100%; text-align: left; color: var(--text);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  button.settings-row { transition: background 0.2s; }
+  button.settings-row:hover { background: rgba(255,255,255,0.02); }
+  .settings-row .row-main { display: flex; flex-direction: column; gap: 3px; }
+  .settings-row .row-sub { font-size: 12.5px; color: var(--muted); }
+  .settings-row .chevron { color: var(--muted); flex-shrink: 0; display: flex; }
+  .settings-row .chevron svg { width: 16px; height: 16px; }
+  .settings-row.danger-row { color: var(--danger); }
+
+  .switch-row label.switch-label { flex: 1; cursor: pointer; }
+  .switch { position: relative; width: 40px; height: 23px; flex-shrink: 0; display: inline-block; }
+  .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .switch .track { position: absolute; inset: 0; background: var(--surface-light); border: 1px solid var(--border); border-radius: 999px; transition: background 0.25s; }
+  .switch .thumb { position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; background: var(--muted); border-radius: 50%; transition: transform 0.25s var(--ease), background 0.25s; }
+  .switch input:checked + .track { background: var(--primary-soft); border-color: var(--primary); }
+  .switch input:checked + .track + .thumb { transform: translateX(17px); background: var(--primary); }
+
+  .future-note { margin-top: 20px; font-size: 12px; color: var(--muted); text-align: center; opacity: 0.7; }
+
+  /* ---------- mobile profile dropdown ---------- */
+  .profile-menu { position: relative; }
+  .profile-trigger { display: flex; }
+  .profile-dropdown {
+    position: absolute; top: 44px; right: 0;
+    background: var(--surface-light); border: 1px solid var(--border);
+    border-radius: var(--radius-s); min-width: 170px; padding: 6px;
+    display: none; flex-direction: column; z-index: 30;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+  }
+  .profile-dropdown.open { display: flex; animation: fade-in 0.2s var(--ease); }
+  .profile-dropdown button { text-align: left; padding: 10px 12px; border-radius: 7px; font-size: 13.5px; color: var(--text); width: 100%; }
+  .profile-dropdown button:hover, .profile-dropdown button:focus-visible { background: rgba(255,255,255,0.06); }
+  .profile-dropdown button.danger { color: var(--danger); }
+
+  /* ---------- toast system ---------- */
+  .toast-region {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    max-width: 320px;
+  }
+  .toast-item {
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-s);
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+  }
+  .toast-item.show { opacity: 1; transform: translateY(0); }
+  .toast-undo { color: var(--primary); font-weight: 500; font-size: 13px; flex-shrink: 0; }
+  .toast-undo:hover { color: #a89bff; }
+
+  /* ---------- mobile nav ---------- */
+  .mobile-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    z-index: 20; padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+  .mobile-nav-list { list-style: none; display: flex; justify-content: space-around; }
+  .mobile-nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--muted); font-size: 10.5px; padding: 6px 14px; border-radius: 12px; min-width: 56px;
+  }
+  .mobile-nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+  .mobile-nav-item[aria-selected="true"] { color: var(--primary); }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 880px) {
+    .sidebar { display: none; }
+    .main { padding: 20px 18px 90px; }
+    .mobile-topbar { display: flex; justify-content: space-between; align-items: center; max-width: 760px; margin: 0 auto 22px; position: relative; }
+    .mobile-topbar .wordmark-row { gap: 8px; }
+    .mobile-topbar .wordmark-title { font-size: 17px; }
+    .mobile-nav { display: block; }
+    .info-grid { grid-template-columns: 1fr; }
+    .chat-panel { height: calc(100vh - 220px); }
+    .page-title { font-size: 23px; }
+    .toast-region { right: 12px; bottom: calc(78px + env(safe-area-inset-bottom)); left: 12px; max-width: none; align-items: stretch; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient" aria-hidden="true"><span></span><span></span></div>
+
+<div class="app">
+
+  <!-- ============ SIDEBAR (desktop) ============ -->
+  <aside class="sidebar">
+    <div class="wordmark">
+      <div class="wordmark-row">
+        <svg class="wordmark-mark" width="26" height="20" viewBox="0 0 26 20" aria-hidden="true">
+          <path class="wave-1" d="M1 12 C 4 6, 8 6, 11 12 S 18 18, 21 12" />
+          <path class="wave-2" d="M1 16 C 4 12, 8 12, 11 16 S 18 20, 21 16" />
+        </svg>
+        <span class="wordmark-title">YANKI</span>
+      </div>
+      <p class="wordmark-tagline">Kendini zaman içinde duymanın bir yolu.</p>
+    </div>
+
+    <ul class="nav-list" role="tablist" aria-label="Ana menü" id="sidebar-tablist">
+      <li>
+        <button class="nav-item" id="tab-bugun" data-target="bugun" role="tab" aria-selected="true" aria-controls="panel-bugun">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2 12h2.4M19.6 12H22M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg>
+          Bugün
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" id="tab-sohbet" data-target="sohbet" role="tab" aria-selected="false" aria-controls="panel-sohbet">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4V5z"/></svg>
+          Sohbet
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" id="tab-hafizam" data-target="hafizam" role="tab" aria-selected="false" aria-controls="panel-hafizam">
+          <svg viewBox="0 0 24 24"><path d="M4 4h11l5 5v11H4V4z"/><path d="M15 4v5h5"/></svg>
+          Hafızam
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" id="tab-icgoruler" data-target="icgoruler" role="tab" aria-selected="false" aria-controls="panel-icgoruler">
+          <svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-3.4 10.9c.5.4.9 1 .9 1.7v.9h5v-.9c0-.7.4-1.3.9-1.7A6 6 0 0 0 12 3z"/><path d="M9.5 19.5h5M10.5 22h3"/></svg>
+          İçgörüler
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" id="tab-benlik" data-target="benlik" role="tab" aria-selected="false" aria-controls="panel-benlik">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.2"/><path d="M5.5 20c1.4-3.6 4-5.4 6.5-5.4s5.1 1.8 6.5 5.4"/></svg>
+          Benlik
+        </button>
+      </li>
+      <li>
+        <button class="nav-item" id="tab-ayarlar" data-target="ayarlar" role="tab" aria-selected="false" aria-controls="panel-ayarlar">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10c.2.6.8 1.1 1.5 1.1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          Ayarlar
+        </button>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="avatar" aria-hidden="true" id="sidebar-avatar-initial">M</div>
+      <div>
+        <div class="name" id="sidebar-user-name">Miraç</div>
+        <div class="meta" id="sidebar-user-meta">Yankı seni 18 gündür tanıyor.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+
+    <div class="mobile-topbar">
+      <div class="wordmark-row">
+        <svg class="wordmark-mark" width="22" height="17" viewBox="0 0 26 20" aria-hidden="true">
+          <path class="wave-1" d="M1 12 C 4 6, 8 6, 11 12 S 18 18, 21 12" />
+          <path class="wave-2" d="M1 16 C 4 12, 8 12, 11 16 S 18 20, 21 16" />
+        </svg>
+        <span class="wordmark-title">YANKI</span>
+      </div>
+
+      <div class="profile-menu">
+        <button class="avatar profile-trigger" id="profile-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="profile-dropdown" aria-label="Profil menüsü">M</button>
+        <div class="profile-dropdown" id="profile-dropdown" role="menu" aria-label="Profil menüsü">
+          <button role="menuitem" data-target="benlik" id="profile-menu-benlik">Benlik</button>
+          <button role="menuitem" data-target="ayarlar" id="profile-menu-ayarlar">Ayarlar</button>
+          <button role="menuitem" class="danger" id="profile-menu-logout">Çıkış yap</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 1. BUGÜN ============ -->
+    <section class="panel active" id="panel-bugun" role="tabpanel" aria-labelledby="tab-bugun" tabindex="0">
+      <div class="today-header">
+        <div class="today-date" id="today-date">25 Temmuz 2026, Cumartesi</div>
+        <h1 class="today-greeting" id="today-greeting">Günaydın, Miraç.</h1>
+        <p class="today-prompt">Bugün kendini biraz dinlemek ister misin?</p>
+      </div>
+
+      <div class="card question-card" id="question-card">
+        <div class="question-label">Bugünün sorusu</div>
+        <div class="question-text">Son zamanlarda fikrini değiştiren bir şey oldu mu?</div>
+        <label for="journal-input" class="visually-hidden">Günlük cevabın</label>
+        <textarea id="journal-input" class="journal" placeholder="Aklından geçenleri olduğu gibi yazabilirsin..." aria-label="Günlük cevabın" aria-describedby="journal-hint"></textarea>
+        <p class="field-hint" id="journal-hint" role="alert">Kaydetmek için birkaç kelime yazmalısın.</p>
+        <div class="question-actions">
+          <button class="btn btn-primary is-disabled" id="save-answer-btn" aria-disabled="true">
+            <span class="spinner"></span>
+            <span class="btn-text">Cevabımı kaydet</span>
+          </button>
+          <button class="btn btn-ghost" id="skip-answer-btn" type="button">Bugün geç</button>
+        </div>
+        <div class="saved-toast" id="saved-toast" aria-hidden="true">
+          <span class="ripple"></span>
+          <span>Bunu hatırlayacağım.</span>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="card info-card">
+          <h3>Yankı'nın fark ettiği</h3>
+          <p>Son günlerde gelecek hakkında konuşurken daha temkinli bir dil kullanıyorsun.</p>
+          <div class="meta">8 yanıta dayanıyor</div>
+        </div>
+        <div class="card info-card">
+          <h3>Son Hatıran</h3>
+          <p>Başarılı olmanın yalnızca yüksek notlardan ibaret olmadığını düşünüyorum.</p>
+          <div class="meta">Dün</div>
+        </div>
+        <div class="card info-card">
+          <h3>Yolculuğun</h3>
+          <div class="journey-numbers">
+            <div><strong id="stat-days">18</strong><span>gün</span></div>
+            <div><strong id="stat-answers">34</strong><span>cevap</span></div>
+            <div><strong id="stat-insights">6</strong><span>içgörü</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recent-section">
+        <div class="recent-title">Yakın zamanda</div>
+        <div class="recent-row"><span>Bir karar verirken önce uzun vadede bana ne kazandıracağını düşünürüm.</span><span class="recent-date">20 Tem</span></div>
+        <div class="recent-row"><span>En büyük korkum yalnız kalmak değil, anlaşılmadan yaşamak olabilir.</span><span class="recent-date">23 Tem</span></div>
+        <div class="recent-row"><span>Son zamanlarda başarılı olmayı daha farklı tanımlamaya başladım.</span><span class="recent-date">25 Tem</span></div>
+      </div>
+    </section>
+
+    <!-- ============ 2. SOHBET ============ -->
+    <section class="panel" id="panel-sohbet" role="tabpanel" aria-labelledby="tab-sohbet" tabindex="0" hidden>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Yankı ile konuş</h1>
+          <p class="page-sub">Seni verdiğin cevaplar üzerinden anlamaya çalışır.</p>
+        </div>
+      </div>
+
+      <div class="chat-panel">
+        <div class="chat-scroll" id="chat-scroll" aria-live="off">
+          <div class="msg msg-user">Son zamanlarda neden karar vermekte bu kadar zorlanıyorum?</div>
+          <div class="msg msg-yanki">
+            <div class="bubble">
+              <p>Daha önce yanlış karar vermekten çok, verdiğin kararın seni hedeflerinden uzaklaştırmasından çekindiğini söylemiştin.</p>
+              <p>Belki de şu an seçim yapmayı zorlaştıran şey kararsızlık değil; her seçimin gelecekteki halin üzerinde fazla büyük bir etkisi olduğunu düşünmen olabilir.</p>
+            </div>
+            <button class="memory-toggle" data-memory="m1" aria-expanded="false" aria-controls="memory-m1">
+              <span>Bu yanıtta 2 hatırandan yararlanıldı</span>
+              <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="memory-panel" id="memory-m1">
+              <div class="memory-panel-inner">
+                <div class="memory-quote">"Yanlış bir seçim yapıp zaman kaybetmekten korkuyorum."</div>
+                <div class="memory-quote">"Başarılı olmak benim için kendi ayaklarımın üzerinde durabilmek demek."</div>
+                <div class="memory-note">Yankı yalnızca senin daha önce paylaştığın bilgilerden yararlanır.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <label for="chat-input" class="visually-hidden">Mesajın</label>
+          <textarea id="chat-input" rows="1" placeholder="Aklından geçenleri Yankı'ya anlat..." aria-label="Yankı'ya mesaj yaz"></textarea>
+          <button class="send-btn" id="chat-send-btn" type="button" aria-label="Gönder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. HAFIZAM ============ -->
+    <section class="panel" id="panel-hafizam" role="tabpanel" aria-labelledby="tab-hafizam" tabindex="0" hidden>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Hafızam</h1>
+          <p class="page-sub">Zaman içinde bıraktığın düşünceler.</p>
+        </div>
+      </div>
+
+      <div class="memory-toolbar">
+        <label for="memory-search" class="visually-hidden">Hafızalarında ara</label>
+        <input type="text" class="search-input" id="memory-search" placeholder="Hafızalarında ara...">
+      </div>
+      <div class="filter-row" role="group" aria-label="Hafıza filtreleri">
+        <button class="filter-chip" aria-pressed="true" data-filter="tumu">Tümü</button>
+        <button class="filter-chip" aria-pressed="false" data-filter="degerler">Değerler</button>
+        <button class="filter-chip" aria-pressed="false" data-filter="hedefler">Hedefler</button>
+        <button class="filter-chip" aria-pressed="false" data-filter="iliskiler">İlişkiler</button>
+        <button class="filter-chip" aria-pressed="false" data-filter="korkular">Korkular</button>
+        <button class="filter-chip" aria-pressed="false" data-filter="kararlar">Kararlar</button>
+      </div>
+
+      <div class="timeline" id="memory-timeline">
+        <div class="timeline-item" data-category="hedefler" data-text="son zamanlarda başarılı olmayı daha farklı tanımlamaya başladım">
+          <div class="memory-card">
+            <div class="memory-card-top">
+              <div class="m-date">25 Temmuz 2026</div>
+              <div class="dropdown">
+                <button class="kebab" aria-label="Seçenekler" aria-haspopup="true" aria-expanded="false" data-menu-toggle>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                </button>
+                <div class="dropdown-menu" role="menu">
+                  <button role="menuitem">Detayı gör</button>
+                  <button role="menuitem">Yeni düşüncemi ekle</button>
+                  <button role="menuitem" class="hide-entry">Gizle</button>
+                </div>
+              </div>
+            </div>
+            <div class="m-text">Son zamanlarda başarılı olmayı daha farklı tanımlamaya başladım.</div>
+            <div class="m-tags">Günlük soru · Hedefler</div>
+          </div>
+        </div>
+
+        <div class="timeline-item" data-category="korkular" data-text="en büyük korkum yalnız kalmak değil anlaşılmadan yaşamak">
+          <div class="memory-card">
+            <div class="memory-card-top">
+              <div class="m-date">23 Temmuz 2026</div>
+              <div class="dropdown">
+                <button class="kebab" aria-label="Seçenekler" aria-haspopup="true" aria-expanded="false" data-menu-toggle>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                </button>
+                <div class="dropdown-menu" role="menu">
+                  <button role="menuitem">Detayı gör</button>
+                  <button role="menuitem">Yeni düşüncemi ekle</button>
+                  <button role="menuitem" class="hide-entry">Gizle</button>
+                </div>
+              </div>
+            </div>
+            <div class="m-text">En büyük korkum yalnız kalmak değil, anlaşılmadan yaşamak olabilir.</div>
+            <div class="m-tags">Onboarding · Korkular</div>
+          </div>
+        </div>
+
+        <div class="timeline-item" data-category="kararlar" data-text="bir karar verirken önce uzun vadede bana ne kazandıracağını düşünürüm">
+          <div class="memory-card">
+            <div class="memory-card-top">
+              <div class="m-date">20 Temmuz 2026</div>
+              <div class="dropdown">
+                <button class="kebab" aria-label="Seçenekler" aria-haspopup="true" aria-expanded="false" data-menu-toggle>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                </button>
+                <div class="dropdown-menu" role="menu">
+                  <button role="menuitem">Detayı gör</button>
+                  <button role="menuitem">Yeni düşüncemi ekle</button>
+                  <button role="menuitem" class="hide-entry">Gizle</button>
+                </div>
+              </div>
+            </div>
+            <div class="m-text">Bir karar verirken önce uzun vadede bana ne kazandıracağını düşünürüm.</div>
+            <div class="m-tags">Onboarding · Kararlar</div>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state" id="memory-empty-state" hidden>Bu filtreye uygun bir hatıra bulunamadı.</div>
+    </section>
+
+    <!-- ============ 4. İÇGÖRÜLER ============ -->
+    <section class="panel" id="panel-icgoruler" role="tabpanel" aria-labelledby="tab-icgoruler" tabindex="0" hidden>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">İçgörüler</h1>
+          <p class="page-sub">Cevaplarında zaman içinde beliren örüntüler.</p>
+        </div>
+      </div>
+      <p class="insight-summary">Yankı şu ana kadar 34 cevabından 6 içgörü oluşturdu.</p>
+
+      <div class="insight-list">
+        <div class="card insight-card">
+          <span class="insight-time">Son 3 haftada belirdi</span>
+          <div class="insight-card-head">
+            <div class="insight-title">Karar verme</div>
+            <span class="confidence-tag">Güven: Orta</span>
+          </div>
+          <div class="insight-body">
+            <p>Son üç haftada kararlarını anlatırken sonuçtan çok, kaybedebileceğin zamanı vurguladın.</p>
+            <p>Bu durum, kararlarının doğruluğundan önce geri dönüşü olup olmadığını önemsediğini gösterebilir.</p>
+          </div>
+          <div class="insight-footer">
+            <span class="basis">12 yanıta dayanıyor</span>
+            <button class="evidence-toggle" data-evidence="e1" aria-expanded="false" aria-controls="evidence-e1">
+              <span>Dayanakları gör</span>
+              <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
+          <div class="evidence-panel" id="evidence-e1">
+            <div class="evidence-panel-inner">
+              <div class="evidence-quote">"Yanlış bir seçim yapıp zaman kaybetmekten korkuyorum."</div>
+              <div class="evidence-quote">"Bir kararı uygulamadan önce genelde birkaç kez daha düşünürüm."</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card insight-card">
+          <span class="insight-time">İlk kez 18 Temmuz'da fark edildi</span>
+          <div class="insight-card-head">
+            <div class="insight-title">Başarı</div>
+            <span class="confidence-tag">Güven: Yüksek</span>
+          </div>
+          <div class="insight-body">
+            <p>Başarı tanımın yalnızca akademik sonuçlardan, bağımsızlık ve değer üretebilme yönüne doğru genişliyor olabilir.</p>
+          </div>
+          <div class="insight-footer">
+            <span class="basis">18 yanıta dayanıyor</span>
+            <button class="evidence-toggle" data-evidence="e2" aria-expanded="false" aria-controls="evidence-e2">
+              <span>Dayanakları gör</span>
+              <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
+          <div class="evidence-panel" id="evidence-e2">
+            <div class="evidence-panel-inner">
+              <div class="evidence-quote">"Başarılı olmak benim için kendi ayaklarımın üzerinde durabilmek demek."</div>
+              <div class="evidence-quote">"Son zamanlarda başarılı olmayı daha farklı tanımlamaya başladım."</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card insight-card">
+          <span class="insight-time">Son 7 cevapta tekrar etti</span>
+          <div class="insight-card-head">
+            <div class="insight-title">İlişkiler</div>
+            <span class="confidence-tag">Güven: Düşük</span>
+          </div>
+          <div class="insight-body">
+            <p>İnsanlara yakın olma isteğin ile kendini tamamen açma konusundaki temkinliliğin cevaplarında birlikte tekrar ediyor.</p>
+          </div>
+          <div class="insight-footer">
+            <span class="basis">7 yanıta dayanıyor</span>
+            <button class="evidence-toggle" data-evidence="e3" aria-expanded="false" aria-controls="evidence-e3">
+              <span>Dayanakları gör</span>
+              <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
+          <div class="evidence-panel" id="evidence-e3">
+            <div class="evidence-panel-inner">
+              <div class="evidence-quote">"En büyük korkum yalnız kalmak değil, anlaşılmadan yaşamak olabilir."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 5. BENLİK ============ -->
+    <section class="panel" id="panel-benlik" role="tabpanel" aria-labelledby="tab-benlik" tabindex="0" hidden>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Yankı seni nasıl tanıyor?</h1>
+          <p class="page-sub">Bu kesin bir tanım değildir. Yankı seni verdiğin cevaplar üzerinden zaman içinde anlamaya çalışır.</p>
+        </div>
+      </div>
+
+      <div class="self-section">
+        <h3>Değerlerin</h3>
+        <div class="value-tags">
+          <span class="value-tag">Bağımsızlık</span>
+          <span class="value-tag">Güven</span>
+          <span class="value-tag">Üretkenlik</span>
+          <span class="value-tag">Bağlılık</span>
+        </div>
+      </div>
+
+      <div class="self-section">
+        <h3>Karar verme biçimin</h3>
+        <p class="desc">Karar verirken önce uzun vadeli etkileri düşünüyorsun. Belirsizliğin yüksek olduğu durumlarda seçenekleri tekrar tekrar değerlendirme eğilimin olabilir.</p>
+      </div>
+
+      <div class="self-section">
+        <h3>Hayatındaki amaç</h3>
+        <p class="desc">Kendi ayaklarının üzerinde durmak ve yalnızca kendin için değil, başkaları için de değer üreten işler ortaya koymak.</p>
+      </div>
+
+      <div class="self-section">
+        <h3>İletişim tarzın</h3>
+        <p class="desc">Kısa, doğrudan ve samimi. Ciddi konularda mizahı tamamen bırakmıyor, ancak duygularını çoğunlukla dolaylı biçimde ifade ediyorsun.</p>
+      </div>
+
+      <div class="self-section">
+        <h3>Yankı'nın güven seviyesi</h3>
+        <div class="confidence-block">
+          <div class="stage-indicator" role="list" aria-label="Yankı'nın seni tanıma aşaması">
+            <div class="stage active" role="listitem">
+              <span class="stage-line" aria-hidden="true"></span>
+              <span class="stage-dot" aria-hidden="true"></span>
+              <span class="stage-label">Tanışmaya başladı</span>
+            </div>
+            <div class="stage" role="listitem">
+              <span class="stage-line" aria-hidden="true"></span>
+              <span class="stage-dot" aria-hidden="true"></span>
+              <span class="stage-label">Seni daha iyi anlıyor</span>
+            </div>
+            <div class="stage" role="listitem">
+              <span class="stage-line" aria-hidden="true"></span>
+              <span class="stage-dot" aria-hidden="true"></span>
+              <span class="stage-label">Derinleşen profil</span>
+            </div>
+          </div>
+          <p class="confidence-note">Daha güçlü bir profil için zaman içinde cevap vermeye devam et.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. AYARLAR ============ -->
+    <section class="panel" id="panel-ayarlar" role="tabpanel" aria-labelledby="tab-ayarlar" tabindex="0" hidden>
+      <div class="page-head">
+        <div><h1 class="page-title">Ayarlar</h1></div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Hesap</h3>
+        <div class="settings-list">
+          <button class="settings-row" type="button" data-demo-setting="Ad">
+            <span class="row-main"><span>Ad</span><span class="row-sub" id="settings-name-value">Miraç</span></span>
+            <span class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg></span>
+          </button>
+          <button class="settings-row" type="button" data-demo-setting="E-posta">
+            <span class="row-main"><span>E-posta</span><span class="row-sub">mirac@ornek.com</span></span>
+            <span class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg></span>
+          </button>
+          <button class="settings-row" type="button" data-demo-setting="Şifre değiştir">
+            <span class="row-main"><span>Şifre değiştir</span></span>
+            <span class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Gizlilik</h3>
+        <div class="settings-list">
+          <button class="settings-row" type="button" data-demo-setting="Verilerimi indir">
+            <span class="row-main"><span>Verilerimi indir</span></span>
+            <span class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg></span>
+          </button>
+          <button class="settings-row" type="button" data-demo-setting="Yankı'nın kullandığı hatıraları göster">
+            <span class="row-main"><span>Yankı'nın kullandığı hatıraları göster</span></span>
+            <span class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg></span>
+          </button>
+          <button class="settings-row" type="button" data-demo-setting="Kişilik profilimi yeniden oluştur">
+            <span class="row-main"><span>Kişilik profilimi yeniden oluştur</span></span>
+            <span class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg></span>
+          </button>
+          <button class="settings-row danger-row" type="button" data-demo-setting="Hesabımı ve verilerimi sil">
+            <span class="row-main"><span>Hesabımı ve verilerimi sil</span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Bildirimler</h3>
+        <div class="settings-list">
+          <div class="settings-row switch-row">
+            <label class="switch-label" for="switch-daily-question">Günün sorusu</label>
+            <label class="switch"><input type="checkbox" id="switch-daily-question" checked aria-label="Günün sorusu bildirimi"><span class="track"></span><span class="thumb"></span></label>
+          </div>
+          <div class="settings-row switch-row">
+            <label class="switch-label" for="switch-reminder"><span class="row-main"><span>Hatırlatma saati</span><span class="row-sub">20:30</span></span></label>
+            <label class="switch"><input type="checkbox" id="switch-reminder" checked aria-label="Hatırlatma saati bildirimi"><span class="track"></span><span class="thumb"></span></label>
+          </div>
+          <div class="settings-row switch-row">
+            <label class="switch-label" for="switch-weekly">Haftalık özet</label>
+            <label class="switch"><input type="checkbox" id="switch-weekly" aria-label="Haftalık özet bildirimi"><span class="track"></span><span class="thumb"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Görünüm</h3>
+        <div class="settings-list">
+          <div class="settings-row switch-row">
+            <label class="switch-label" for="switch-dark">Koyu tema</label>
+            <label class="switch"><input type="checkbox" id="switch-dark" checked aria-label="Koyu tema"><span class="track"></span><span class="thumb"></span></label>
+          </div>
+          <div class="settings-row switch-row">
+            <label class="switch-label" for="switch-system">Sistem temasını kullan</label>
+            <label class="switch"><input type="checkbox" id="switch-system" aria-label="Sistem temasını kullan"><span class="track"></span><span class="thumb"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="future-note">Gelecek özellikler üzerinde çalışıyoruz.</div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ MOBILE BOTTOM NAV ============ -->
+<nav class="mobile-nav" aria-label="Alt gezinme">
+  <ul class="mobile-nav-list">
+    <li><button class="mobile-nav-item" data-target="bugun" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2 12h2.4M19.6 12H22M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg>Bugün</button></li>
+    <li><button class="mobile-nav-item" data-target="sohbet" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4V5z"/></svg>Sohbet</button></li>
+    <li><button class="mobile-nav-item" data-target="hafizam" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 4h11l5 5v11H4V4z"/><path d="M15 4v5h5"/></svg>Hafıza</button></li>
+    <li><button class="mobile-nav-item" data-target="icgoruler" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-3.4 10.9c.5.4.9 1 .9 1.7v.9h5v-.9c0-.7.4-1.3.9-1.7A6 6 0 0 0 12 3z"/><path d="M9.5 19.5h5M10.5 22h3"/></svg>İçgörü</button></li>
+  </ul>
+</nav>
+
+<!-- ============ TOAST REGION ============ -->
+<div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =====================================================
+     Merkezi demo kullanıcı verisi
+  ===================================================== */
+  var demoUser = {
+    name: 'Miraç',
+    daysKnown: 18,
+    answerCount: 34,
+    insightCount: 6
+  };
+
+  /* =====================================================
+     Navigasyon (tab semantiği)
+  ===================================================== */
+  var allTabButtons = document.querySelectorAll('.nav-item, .mobile-nav-item, [data-target].profile-menu button, #profile-menu-benlik, #profile-menu-ayarlar');
+  var panels = document.querySelectorAll('.panel');
+
+  function goTo(target) {
+    panels.forEach(function (panel) {
+      var isMatch = panel.id === 'panel-' + target;
+      panel.hidden = !isMatch;
+      panel.classList.toggle('active', isMatch);
+    });
+
+    document.querySelectorAll('.nav-item').forEach(function (btn) {
+      btn.setAttribute('aria-selected', btn.getAttribute('data-target') === target ? 'true' : 'false');
+    });
+    document.querySelectorAll('.mobile-nav-item').forEach(function (btn) {
+      btn.setAttribute('aria-selected', btn.getAttribute('data-target') === target ? 'true' : 'false');
+    });
+
+    var main = document.querySelector('.main');
+    if (main) main.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  document.querySelectorAll('[data-target]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      goTo(btn.getAttribute('data-target'));
+      closeProfileDropdown();
+    });
+  });
+
+  /* =====================================================
+     Toast sistemi (tek seferde bir toast, kuyruklu)
+  ===================================================== */
+  var toastRegion = document.getElementById('toast-region');
+  var toastQueue = [];
+  var toastActive = false;
+
+  function processToastQueue() {
+    if (toastActive || toastQueue.length === 0) return;
+    toastActive = true;
+    var item = toastQueue.shift();
+
+    var toastEl = document.createElement('div');
+    toastEl.className = 'toast-item';
+    toastEl.setAttribute('role', 'status');
+
+    var textEl = document.createElement('span');
+    textEl.textContent = item.message;
+    toastEl.appendChild(textEl);
+
+    if (item.actionLabel && typeof item.onAction === 'function') {
+      var actionBtn = document.createElement('button');
+      actionBtn.type = 'button';
+      actionBtn.className = 'toast-undo';
+      actionBtn.textContent = item.actionLabel;
+      actionBtn.addEventListener('click', function () {
+        item.onAction();
+        dismissToast();
+      });
+      toastEl.appendChild(actionBtn);
+    }
+
+    toastRegion.appendChild(toastEl);
+    requestAnimationFrame(function () { toastEl.classList.add('show'); });
+
+    var hideTimer = setTimeout(dismissToast, item.duration || 3200);
+
+    function dismissToast() {
+      clearTimeout(hideTimer);
+      toastEl.classList.remove('show');
+      setTimeout(function () {
+        if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
+        toastActive = false;
+        processToastQueue();
+      }, 320);
+    }
+  }
+
+  function showToast(message, options) {
+    options = options || {};
+    toastQueue.push({
+      message: message,
+      actionLabel: options.actionLabel,
+      onAction: options.onAction,
+      duration: options.duration
+    });
+    processToastQueue();
+  }
+
+  /* =====================================================
+     Mobil profil dropdown
+  ===================================================== */
+  var profileTrigger = document.getElementById('profile-trigger');
+  var profileDropdown = document.getElementById('profile-dropdown');
+
+  function openProfileDropdown() {
+    profileDropdown.classList.add('open');
+    profileTrigger.setAttribute('aria-expanded', 'true');
+  }
+  function closeProfileDropdown() {
+    profileDropdown.classList.remove('open');
+    profileTrigger.setAttribute('aria-expanded', 'false');
+  }
+
+  if (profileTrigger) {
+    profileTrigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isOpen = profileDropdown.classList.contains('open');
+      if (isOpen) { closeProfileDropdown(); } else { openProfileDropdown(); }
+    });
+  }
+
+  var logoutBtn = document.getElementById('profile-menu-logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function () {
+      closeProfileDropdown();
+      showToast('Demo sürümünde oturum açık kalır.');
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (profileDropdown.classList.contains('open') && !profileDropdown.contains(e.target) && e.target !== profileTrigger) {
+      closeProfileDropdown();
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && profileDropdown.classList.contains('open')) {
+      closeProfileDropdown();
+      profileTrigger.focus();
+    }
+  });
+
+  /* =====================================================
+     Dinamik tarih ve karşılama
+  ===================================================== */
+  function renderDateAndGreeting() {
+    var now = new Date();
+    var dateFormatter = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+    document.getElementById('today-date').textContent = dateFormatter.format(now);
+
+    var hour = now.getHours();
+    var greetingWord;
+    if (hour >= 5 && hour < 12) greetingWord = 'Günaydın';
+    else if (hour >= 12 && hour < 18) greetingWord = 'İyi günler';
+    else if (hour >= 18 && hour < 23) greetingWord = 'İyi akşamlar';
+    else greetingWord = 'İyi geceler';
+
+    document.getElementById('today-greeting').textContent = greetingWord + ', ' + demoUser.name + '.';
+  }
+
+  function renderUserStats() {
+    document.getElementById('sidebar-user-name').textContent = demoUser.name;
+    document.getElementById('sidebar-user-meta').textContent = 'Yankı seni ' + demoUser.daysKnown + ' gündür tanıyor.';
+    document.getElementById('sidebar-avatar-initial').textContent = demoUser.name.charAt(0);
+    document.getElementById('profile-trigger').textContent = demoUser.name.charAt(0);
+    document.getElementById('stat-days').textContent = demoUser.daysKnown;
+    document.getElementById('stat-answers').textContent = demoUser.answerCount;
+    document.getElementById('stat-insights').textContent = demoUser.insightCount;
+    document.getElementById('settings-name-value').textContent = demoUser.name;
+  }
+
+  renderDateAndGreeting();
+  renderUserStats();
+
+  /* =====================================================
+     Auto-growing textarea
+  ===================================================== */
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 260) + 'px';
+  }
+  document.querySelectorAll('textarea').forEach(function (t) {
+    t.addEventListener('input', function () { autoGrow(t); });
+  });
+
+  /* =====================================================
+     Bugün: günlük cevap doğrulaması + kaydetme
+  ===================================================== */
+  var saveBtn = document.getElementById('save-answer-btn');
+  var skipBtn = document.getElementById('skip-answer-btn');
+  var toast = document.getElementById('saved-toast');
+  var journalInput = document.getElementById('journal-input');
+  var journalHint = document.getElementById('journal-hint');
+  var questionCard = document.getElementById('question-card');
+
+  function hasValidAnswer() {
+    return journalInput.value.trim().length > 0;
+  }
+
+  function updateSaveButtonState() {
+    var valid = hasValidAnswer();
+    saveBtn.classList.toggle('is-disabled', !valid);
+    saveBtn.setAttribute('aria-disabled', valid ? 'false' : 'true');
+    if (valid) {
+      journalInput.classList.remove('invalid');
+      journalHint.classList.remove('show');
+    }
+  }
+
+  journalInput.addEventListener('input', updateSaveButtonState);
+
+  function showValidationError() {
+    journalInput.classList.add('invalid');
+    journalHint.classList.add('show');
+    journalInput.focus();
+  }
+
+  function completeSave() {
+    saveBtn.classList.add('loading');
+    saveBtn.setAttribute('aria-disabled', 'true');
+    setTimeout(function () {
+      saveBtn.classList.remove('loading');
+      journalInput.value = '';
+      autoGrow(journalInput);
+      updateSaveButtonState();
+
+      toast.classList.add('show');
+      questionCard.classList.add('shimmer');
+      setTimeout(function () { toast.classList.remove('show'); }, 3200);
+      setTimeout(function () { questionCard.classList.remove('shimmer'); }, 1200);
+    }, 650);
+  }
+
+  saveBtn.addEventListener('click', function () {
+    if (!hasValidAnswer()) {
+      showValidationError();
+      return;
+    }
+    completeSave();
+  });
+
+  skipBtn.addEventListener('click', function () {
+    journalInput.value = '';
+    autoGrow(journalInput);
+    updateSaveButtonState();
+  });
+
+  /* =====================================================
+     Sohbet: hatıra paneli aç/kapa
+  ===================================================== */
+  function wireMemoryToggle(btn) {
+    btn.addEventListener('click', function () {
+      var panelId = btn.getAttribute('aria-controls') || ('memory-' + btn.getAttribute('data-memory'));
+      var panel = document.getElementById(panelId);
+      var isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  }
+  document.querySelectorAll('.memory-toggle').forEach(wireMemoryToggle);
+
+  /* =====================================================
+     Sohbet: güvenli mesaj gönderme (XSS korumalı)
+  ===================================================== */
+  var chatInput = document.getElementById('chat-input');
+  var chatSendBtn = document.getElementById('chat-send-btn');
+  var chatScroll = document.getElementById('chat-scroll');
+  var chatMemoryCounter = 1;
+
+  var demoReplies = [
+    'Bunu daha önce de dile getirmiştin; zamanla bu düşüncenin nasıl şekillendiğini birlikte görebiliriz.',
+    'Bu, önceki cevaplarında bahsettiğin bir örüntüyle örtüşüyor olabilir. İstersen bunu birlikte biraz daha açalım.',
+    'Söylediklerinden yola çıkarsak, bu senin için yeni bir farkındalık gibi görünüyor.'
+  ];
+
+  function createUserMessageElement(text) {
+    var el = document.createElement('div');
+    el.className = 'msg msg-user';
+    el.textContent = text; // güvenli: doğrudan metin olarak eklenir, HTML olarak yorumlanmaz
+    return el;
+  }
+
+  function createTypingElement() {
+    var wrap = document.createElement('div');
+    wrap.className = 'msg msg-yanki';
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    var indicator = document.createElement('div');
+    indicator.className = 'typing-indicator';
+    for (var i = 0; i < 3; i++) indicator.appendChild(document.createElement('span'));
+    bubble.appendChild(indicator);
+    wrap.appendChild(bubble);
+    return wrap;
+  }
+
+  function createYankiReplyElement(replyText, quotedUserText, memoryId) {
+    var wrap = document.createElement('div');
+    wrap.className = 'msg msg-yanki';
+
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    var p = document.createElement('p');
+    p.textContent = replyText;
+    bubble.appendChild(p);
+    wrap.appendChild(bubble);
+
+    var toggleBtn = document.createElement('button');
+    toggleBtn.className = 'memory-toggle';
+    toggleBtn.setAttribute('aria-expanded', 'false');
+    toggleBtn.setAttribute('aria-controls', 'memory-' + memoryId);
+    var toggleLabel = document.createElement('span');
+    toggleLabel.textContent = 'Bu yanıtta 1 hatırandan yararlanıldı';
+    toggleBtn.appendChild(toggleLabel);
+    var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chevronSvg.setAttribute('viewBox', '0 0 24 24');
+    var chevronPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    chevronPath.setAttribute('d', 'M6 9l6 6 6-6');
+    chevronSvg.appendChild(chevronPath);
+    toggleBtn.appendChild(chevronSvg);
+    wrap.appendChild(toggleBtn);
+
+    var memoryPanel = document.createElement('div');
+    memoryPanel.className = 'memory-panel';
+    memoryPanel.id = 'memory-' + memoryId;
+    var memoryInner = document.createElement('div');
+    memoryInner.className = 'memory-panel-inner';
+
+    var quoteEl = document.createElement('div');
+    quoteEl.className = 'memory-quote';
+    quoteEl.textContent = '"' + quotedUserText + '"'; // kullanıcı girdisi textContent ile güvenli eklendi
+
+    var noteEl = document.createElement('div');
+    noteEl.className = 'memory-note';
+    noteEl.textContent = 'Yankı yalnızca senin daha önce paylaştığın bilgilerden yararlanır.';
+
+    memoryInner.appendChild(quoteEl);
+    memoryInner.appendChild(noteEl);
+    memoryPanel.appendChild(memoryInner);
+    wrap.appendChild(memoryPanel);
+
+    wireMemoryToggle(toggleBtn);
+    return wrap;
+  }
+
+  function sendChatMessage() {
+    var text = chatInput.value.trim();
+    if (!text) return;
+
+    chatScroll.appendChild(createUserMessageElement(text));
+    chatInput.value = '';
+    autoGrow(chatInput);
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+
+    var typingEl = createTypingElement();
+    chatScroll.appendChild(typingEl);
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+
+    setTimeout(function () {
+      typingEl.remove();
+      chatMemoryCounter++;
+      var reply = demoReplies[Math.floor(Math.random() * demoReplies.length)];
+      var replyEl = createYankiReplyElement(reply, text, 'm' + chatMemoryCounter);
+      chatScroll.appendChild(replyEl);
+      chatScroll.scrollTop = chatScroll.scrollHeight;
+    }, 1100);
+  }
+
+  chatSendBtn.addEventListener('click', sendChatMessage);
+  chatInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  /* =====================================================
+     Hafızam: filtre + arama + boş durum
+  ===================================================== */
+  var filterChips = document.querySelectorAll('.filter-chip');
+  var timelineItems = document.querySelectorAll('.timeline-item');
+  var memorySearch = document.getElementById('memory-search');
+  var memoryEmptyState = document.getElementById('memory-empty-state');
+  var activeFilter = 'tumu';
+
+  function applyMemoryFilters() {
+    var query = memorySearch.value.trim().toLowerCase();
+    var visibleCount = 0;
+
+    timelineItems.forEach(function (item) {
+      if (item.dataset.hiddenByUser === 'true') {
+        item.hidden = true;
+        return;
+      }
+      var matchesFilter = activeFilter === 'tumu' || item.getAttribute('data-category') === activeFilter;
+      var matchesSearch = !query || item.getAttribute('data-text').indexOf(query) !== -1;
+      var shouldShow = matchesFilter && matchesSearch;
+      item.hidden = !shouldShow;
+      if (shouldShow) visibleCount++;
+    });
+
+    if (visibleCount === 0) {
+      memoryEmptyState.hidden = false;
+      memoryEmptyState.textContent = query
+        ? 'Aramana uygun bir hatıra bulunamadı.'
+        : 'Bu filtreye uygun bir hatıra bulunamadı.';
+    } else {
+      memoryEmptyState.hidden = true;
+    }
+  }
+
+  filterChips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      filterChips.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+      chip.setAttribute('aria-pressed', 'true');
+      activeFilter = chip.getAttribute('data-filter');
+      applyMemoryFilters();
+    });
+  });
+  memorySearch.addEventListener('input', applyMemoryFilters);
+
+  /* =====================================================
+     Hafızam: üç nokta menüsü + yumuşak gizleme + geri al
+  ===================================================== */
+  document.querySelectorAll('[data-menu-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var menu = btn.nextElementSibling;
+      var alreadyOpen = menu.classList.contains('open');
+      document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
+        m.classList.remove('open');
+        var owner = m.previousElementSibling;
+        if (owner) owner.setAttribute('aria-expanded', 'false');
+      });
+      if (!alreadyOpen) {
+        menu.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
+      m.classList.remove('open');
+      var owner = m.previousElementSibling;
+      if (owner) owner.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
+        m.classList.remove('open');
+        var owner = m.previousElementSibling;
+        if (owner) owner.setAttribute('aria-expanded', 'false');
+      });
+    }
+  });
+
+  document.querySelectorAll('.hide-entry').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var item = btn.closest('.timeline-item');
+      item.classList.add('fading-out');
+      setTimeout(function () {
+        item.dataset.hiddenByUser = 'true';
+        item.hidden = true;
+        item.classList.remove('fading-out');
+        applyMemoryFilters();
+      }, 350);
+
+      showToast('Hatıra görünümden gizlendi.', {
+        actionLabel: 'Geri al',
+        onAction: function () {
+          item.dataset.hiddenByUser = 'false';
+          applyMemoryFilters();
+        }
+      });
+    });
+  });
+
+  /* =====================================================
+     İçgörüler: dayanak paneli
+  ===================================================== */
+  document.querySelectorAll('.evidence-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-evidence');
+      var panel = document.getElementById('evidence-' + id);
+      var isOpen = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+
+  /* =====================================================
+     Ayarlar: demo satır tıklamaları
+  ===================================================== */
+  document.querySelectorAll('[data-demo-setting]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var label = btn.getAttribute('data-demo-setting');
+      showToast(label + ' bu prototipte demo amaçlıdır.');
+    });
+  });
+
+  /* =====================================================
+     İlk yükleme: aktif sekmeyi ayarla
+  ===================================================== */
+  goTo('bugun');
+
+})();
+</script>
+
+</body>
+</html>

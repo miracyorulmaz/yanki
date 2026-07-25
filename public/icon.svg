@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Yankı: dalga/echo motifli Y harfi -->
+  <rect width="512" height="512" rx="96" fill="#0a0a0a"/>
+  <g transform="translate(256,256)">
+    <!-- Y harfi gövdesi -->
+    <path d="M-50,-120 L0,-20 L50,-120" stroke="#fafafa" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M0,-20 L0,100" stroke="#fafafa" stroke-width="18" stroke-linecap="round"/>
+    <!-- Yankı dalgaları -->
+    <path d="M-80,130 Q-40,140 0,130 Q40,120 80,130" stroke="#fafafa" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <path d="M-60,160 Q-30,170 0,160 Q30,150 60,160" stroke="#fafafa" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.6"/>
+    <path d="M-40,190 Q-20,200 0,190 Q20,180 40,190" stroke="#fafafa" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.35"/>
+  </g>
+</svg>

@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   Yankı — Prototype Design System
+   index.html'den birebir taşınmış CSS custom property'leri.
+   Fraunces + Inter fontları, koyu tema paleti.
+   ============================================================================ */
+
+:root {
+  --background: #0d1017;
+  --surface: #151924;
+  --surface-light: #1d2230;
+  --primary: #8b7cff;
+  --primary-soft: rgba(139, 124, 255, 0.14);
+  --secondary: #d2a96f;
+  --text: #f1f0ed;
+  --muted: #9298a8;
+  --border: rgba(255, 255, 255, 0.08);
+  --danger: #e08a8a;
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-s: 10px;
+  --radius-m: 14px;
+  --radius-l: 20px;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--text);
+  --color-surface: var(--surface);
+  --color-surface-light: var(--surface-light);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-danger: var(--danger);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --radius-s: var(--radius-s);
+  --radius-m: var(--radius-m);
+  --radius-l: var(--radius-l);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--text);
+}
+
+/* iOS safe-area — PWA standalone */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Ambient background */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ambient-bg span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.1;
+  animation: drift 42s ease-in-out infinite;
+}
+.ambient-bg span:nth-child(1) {
+  width: 520px;
+  height: 520px;
+  background: var(--primary);
+  top: -120px;
+  left: -100px;
+}
+.ambient-bg span:nth-child(2) {
+  width: 460px;
+  height: 460px;
+  background: #5c7cff;
+  bottom: -160px;
+  right: -80px;
+  animation-delay: -20s;
+}
+
+@keyframes drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(30px, -20px) scale(1.06);
+  }
+}
+
+/* Focus visible */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
