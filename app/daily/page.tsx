@@ -35,13 +35,13 @@ export default function DailyPage() {
       }
 
       // Onboarding kontrolü
-      const { data: profile } = await supabase
-        .from('users')
-        .select('onboarding_completed_at')
-        .eq('id', currentUser.id)
-        .single();
+      const { data: hasProfile } = await supabase
+        .from('personality_profiles')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
 
-      if (!profile?.onboarding_completed_at) {
+      if (!hasProfile) {
         router.push('/onboarding');
         return;
       }

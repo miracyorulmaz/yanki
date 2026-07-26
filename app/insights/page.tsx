@@ -37,8 +37,8 @@ export default function InsightsPage() {
       const user = authData?.user;
       if (!user) { router.push('/login'); return; }
 
-      const { data: profile } = await supabase.from('users').select('onboarding_completed_at').eq('id', user.id).single();
-      if (!profile?.onboarding_completed_at) { router.push('/onboarding'); return; }
+      const { data: hasProfile } = await supabase.from('personality_profiles').select('id').eq('user_id', user.id).maybeSingle();
+      if (!hasProfile) { router.push('/onboarding'); return; }
 
       const { data: all } = await supabase.from('insights').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
 

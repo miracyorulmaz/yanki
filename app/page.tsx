@@ -46,10 +46,10 @@ export default function HomePage() {
       setUser(currentUser);
       if (!currentUser) { setLoading(false); return; }
 
-      // Check onboarding
-      const { data: profile } = await supabase
-        .from('users').select('onboarding_completed_at').eq('id', currentUser.id).single();
-      if (!profile?.onboarding_completed_at) { router.push('/onboarding'); return; }
+      // Check onboarding — personality_profiles varsa onboarding tamamlanmıştır
+      const { data: hasProfile } = await supabase
+        .from('personality_profiles').select('id').eq('user_id', currentUser.id).maybeSingle();
+      if (!hasProfile) { router.push('/onboarding'); return; }
 
       // Stats
       const { count: ec } = await supabase.from('entries').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id);

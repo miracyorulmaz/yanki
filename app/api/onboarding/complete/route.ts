@@ -76,10 +76,11 @@ export async function POST() {
     firstMessage = result.firstMessage;
   } catch (err) {
     console.error('Personality profile generation failed:', err);
-    return NextResponse.json(
-      { error: 'Kişilik profili oluşturulamadı. Lütfen tekrar deneyin.' },
-      { status: 500 },
-    );
+    // Claude API yoksa fallback ile devam et — onboarding engellenmez
+    const answers = allEntries.map((e) => e.answer).join('. ');
+    summaryText = `Bu kişi onboarding'de ${allEntries.length} soru cevapladı. Cevapları: ${answers}`.slice(0, 500);
+    traits = {};
+    firstMessage = 'Seni daha iyi tanımak için sabırsızlanıyorum.';
   }
 
   // Adım 4: personality_profiles satırı oluştur
