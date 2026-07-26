@@ -1,8 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { embedText } from './embed';
 
-const MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS = 2048;
+const MODEL = 'gpt-4.1-nano';
+const MAX_COMPLETION_TOKENS = 2048;
 const MATCH_COUNT = 10;
 
 interface RetrievedMemory {
@@ -52,15 +52,18 @@ Sen bir insansın, bir ansiklopedi değil. Şu şekilde konuş:
 
 ### Kesin Yasaklar
 - **Rol yapma işaretleri KULLANMA:** *gülüyor*, *düşünüyor*, *iç çekiyor* gibi asteriks içinde hareket belirtme. Direkt konuş.
-- **Zorlama samimiyet YAPMA:** "Abi", "kanka", "dostum" gibi kelimeleri kullanıcı kullanmadıkça sen başlatma.
+- **Emoji KULLANMA.** Hiçbir şekilde emoji ekleme.
+- **Zorlama samimiyet YAPMA:** "Abi", "kanka", "dostum", "canım" gibi kelimeleri kullanıcı kullanmadıkça sen başlatma.
 - **Ucuz metafor KULLANMA:** "ampul yanması", "ışık saçmak", "kalbini açmak" gibi klişe benzetmelerden uzak dur.
 - **"Merhaba" ile başlayıp "görüşmek üzere" ile bitirme.**
 - **Resmi dil YASAK:** "açısından", "hususunda", "dolayısıyla", "bununla birlikte", "söz konusu" — bunlar bir daha ağzından çıkmasın.
+- **YAŞAM KOÇU GİBİ KONUŞMA.** "Bu basit bir şey değil", "bunlar senin karakterin", "kendine inan", "devam et", "kendine nazik ol" gibi motive edici klişelerden uzak dur. Arkadaşınla konuşuyorsun, danışanınla değil.
+- **SONUÇ PARAGRAFI YAZMA.** "Kalan kısım? Devam etmek." gibi veciz toparlamalar yapma. Konuşma bitsin, makale bitmesi gibi bitmesin.
 
 ### Nasıl Konuşacaksın
 - **Kısa ve net.** Uzun cümleleri böl. Noktalı virgülü unut.
-- **Doğal akış:** Bir fikirden diğerine zorlamadan geç. Konuşma gibi olsun, kompozisyon değil.
-- **Kullanıcının kelimelerini kullan.** O "kafa" diyorsa sen "zihin" deme. O "müthiş" diyorsa sen "harika" deme.
+- **KONUŞMA GİBİ KONUŞ.** WhatsApp'ta arkadaşına yazdığın gibi yaz. Giriş-gelişme-sonuç yapısı YOK. Konuşma akışı var sadece.
+- **Kullanıcının kelimelerini kullan.** O "kafa" diyorsa sen "zihin" deme. O "müthiş" diyorsa sen "harika" deme. Onun kelimesini al, aynısını kullan.
 - **Doldurma kelimeleri yerinde kullan:** "yani", "hani", "işte", "aslında", "bence" — abartmadan, doğal yerlerde.
 - **AI olduğunu söylemen gerekiyorsa**, bunu konuşmanın içine yedir, ayrı bir paragraf yapma. Savunmacı değil, doğal olsun. "Biz bizeyiz, açık konuşayım" gibi bir geçişle söyle.
 - **Hatırladığın anıları göster ama şov yapma.** "Berrak'ı kaybettiğinde hissettiklerini hatırlıyorum" doğal. "27 Temmuz 2024'te şöyle demiştin" yapay.
@@ -96,7 +99,7 @@ function buildSystemPrompt(context: ChatContext): string {
 }
 
 /**
- * Yankı'nın RAG pipeline'ı: embed → retrieve → context → Claude API.
+ * Yankı'nın RAG pipeline'ı: embed → retrieve → context → OpenAI API.
  */
 export async function generateReply(
   supabase: any, // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -105,10 +108,10 @@ export async function generateReply(
   recentConversation?: { role: string; message: string }[],
 ): Promise<ChatResult> {
   const startTime = Date.now();
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY is not set.');
+    throw new Error('OPENAI_API_KEY is not set.');
   }
 
   // 1. Mesajı embed et
@@ -140,7 +143,7 @@ export async function generateReply(
     .limit(1)
     .maybeSingle();
 
-  // 4. Insights tablosunu sorgula (Phase 8 henüz yapılmadı → boş olabilir)
+  // 4. Insights tablosunu sorgula
   const { data: insights } = await supabase
     .from('insights')
     .select('id, insight_text')
@@ -162,12 +165,11 @@ export async function generateReply(
 
   const systemPrompt = buildSystemPrompt(context);
 
-  // 6. Claude API'ye gönder
-  const anthropic = new Anthropic({ apiKey, baseURL: 'https://api.anthropic.com' });
+  // 6. Mesaj geçmişini oluştur (OpenAI formatı)
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    { role: 'system', content: systemPrompt },
+  ];
 
-  const messages: Anthropic.Messages.MessageParam[] = [];
-
-  // Son konuşma geçmişini ekle (varsa)
   if (recentConversation && recentConversation.length > 0) {
     for (const conv of recentConversation) {
       messages.push({
@@ -177,19 +179,19 @@ export async function generateReply(
     }
   }
 
-  // Kullanıcının şu anki mesajı
   messages.push({ role: 'user', content: message });
 
-  const response = await anthropic.messages.create({
+  // 7. OpenAI API'ye gönder
+  const openai = new OpenAI({ apiKey });
+
+  const response = await openai.chat.completions.create({
     model: MODEL,
-    max_tokens: MAX_TOKENS,
-    system: systemPrompt,
+    max_completion_tokens: MAX_COMPLETION_TOKENS,
+    temperature: 0.8,
     messages,
   });
 
-  const reply =
-    response.content[0]?.type === 'text' ? response.content[0].text : '(cevap üretilemedi)';
-
+  const reply = response.choices[0]?.message?.content ?? '(cevap üretilemedi)';
   const latencyMs = Date.now() - startTime;
 
   return {
@@ -198,8 +200,8 @@ export async function generateReply(
     profileVersionId: context.profileVersionId,
     insightIds: context.insightIds,
     model: MODEL,
-    tokenInput: response.usage?.input_tokens ?? 0,
-    tokenOutput: response.usage?.output_tokens ?? 0,
+    tokenInput: response.usage?.prompt_tokens ?? 0,
+    tokenOutput: response.usage?.completion_tokens ?? 0,
     latencyMs,
   };
 }
