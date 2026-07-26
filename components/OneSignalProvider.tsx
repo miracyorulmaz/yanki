@@ -29,20 +29,40 @@ export default function OneSignalProvider({
   const supabase = useSupabase();
 
   useEffect(() => {
+    // FIX: OneSignal localhost uygulaması production domain'de crash ediyor.
+    // Production'da APP_ID placeholder olduğu sürece SDK yüklenmesin.
+    if (!APP_ID || APP_ID === 'your-onesignal-app-id') {
+      return;
+    }
+
+    // Production domain'de OneSignal localhost app'i çalışmaz — sadece localhost'ta başlat
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalhost) {
+      console.debug('[OneSignal] Production ortamda OneSignal devre dışı (localhost app).');
+      return;
+    }
+
     // SDK zaten inject edilmişse tekrar etme
     if (document.querySelector(`script[src="${ONESIGNAL_SDK_URL}"]`)) return;
-    if (!APP_ID || APP_ID === 'your-onesignal-app-id') return;
 
-    const script = document.createElement('script');
-    script.src = ONESIGNAL_SDK_URL;
-    script.async = true;
-    script.onload = () => {
-      oneSignalInit(APP_ID);
-    };
-    script.onerror = () => {
-      console.warn('[OneSignal] SDK script yüklenemedi.');
-    };
-    document.head.appendChild(script);
+    try {
+      const script = document.createElement('script');
+      script.src = ONESIGNAL_SDK_URL;
+      script.async = true;
+      script.onload = () => {
+        try {
+          oneSignalInit(APP_ID);
+        } catch (e) {
+          console.warn('[OneSignal] SDK init başarısız:', e);
+        }
+      };
+      script.onerror = () => {
+        console.warn('[OneSignal] SDK script yüklenemedi.');
+      };
+      document.head.appendChild(script);
+    } catch (e) {
+      console.warn('[OneSignal] Script injection başarısız:', e);
+    }
   }, []);
 
   // Auth state değişikliklerini dinle

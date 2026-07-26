@@ -61,15 +61,19 @@ export function oneSignalInit(appId: string): void {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
 
   window.OneSignalDeferred.push(() => {
-    window.OneSignal?.init({
-      appId,
-      // localhost'ta test için secure origin kontrolünü atla
-      allowLocalhostAsSecureOrigin: window.location.hostname === 'localhost',
-      serviceWorkerParam: { scope: '/' },
-      serviceWorkerPath: 'OneSignalSDKWorker.js',
-    });
+    try {
+      window.OneSignal?.init({
+        appId,
+        // localhost'ta test için secure origin kontrolünü atla
+        allowLocalhostAsSecureOrigin: window.location.hostname === 'localhost',
+        serviceWorkerParam: { scope: '/' },
+        serviceWorkerPath: 'OneSignalSDKWorker.js',
+      });
 
-    console.debug('[OneSignal] SDK başlatıldı, appId:', appId.slice(0, 8) + '...');
+      console.debug('[OneSignal] SDK başlatıldı, appId:', appId.slice(0, 8) + '...');
+    } catch (e) {
+      console.warn('[OneSignal] init hatası (domain eşleşmiyor olabilir):', e);
+    }
   });
 }
 
