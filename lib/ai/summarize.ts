@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
-const MODEL = 'claude-haiku-4-5-20251001';
-const MAX_TOKENS = 1024;
+const MODEL = 'gpt-5.6-luna';
+const MAX_COMPLETION_TOKENS = 1024;
 
 interface OnboardingEntry {
   question: string;
@@ -30,14 +30,14 @@ JSON code block içine sarmadan, doğrudan ver.
 {
   "summaryText": "Kullanıcının kişiliğini doğal bir dille özetleyen 3-5 cümlelik paragraf. Kullanıcının kendi kelimelerine referans ver. Gözlemci ve empatik bir ton kullan, ama yapmacık olma.",
   "traits": {
-    "korkular": ["kullanıcının belirttiği korkular — string array"],
-    "sevdigi_insanlar": ["hayatındaki en önemli insanlar — string array"],
+    "korkular": ["korku 1", "korku 2"],
+    "sevdigi_insanlar": ["kişi 1", "kişi 2"],
     "hayattaki_amac": "kullanıcının hayat amacı veya anlam arayışı — string",
     "karar_alma_bicimi": "mantıksal mı, duygusal mı, başkalarına danışarak mı — string",
     "espri_anlayisi": "kullanıcının mizah tarzı — string",
     "risk_alma_seviyesi": "düşük / orta / yüksek — string"
   },
-  "firstMessage": "Yankı'nın kullanıcıya söyleyeceği İLK mesaj. 2-3 cümle. Kullanıcının onboarding'de paylaştığı 2-3 somut şeye referans ver. 'Hoş geldin', 'Merhaba' gibi jenerik ifadeleri tek başına kullanma — her zaman somut bir referansla birleştir."
+  "firstMessage": "Yankı'nın kullanıcıya söyleyeceği İLK mesaj. 2-3 cümle. Kullanıcının onboarding'de paylaştığı 2-3 somut şeye referans ver. WhatsApp mesajı gibi doğal olsun. 'Hoş geldin', 'Merhaba' gibi jenerik ifadeleri tek başına kullanma — her zaman somut bir referansla birleştir."
 }
 
 ## Traits Kuralları
@@ -50,30 +50,36 @@ JSON code block içine sarmadan, doğrudan ver.
 - Kullanıcı bir soruyu cevaplamamışsa (boş/atlanmış), o veriyi yok say.`;
 
 /**
- * Kullanıcının onboarding cevaplarından Claude API ile kişilik profili üretir.
+ * Kullanıcının onboarding cevaplarından OpenAI API ile kişilik profili üretir.
  * summaryText + traits (Identity Layer) + firstMessage tek bir API çağrısında.
  */
 export async function buildPersonalityProfile(
   entries: OnboardingEntry[],
 ): Promise<PersonalityProfileResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY is not set. Personality profile cannot be generated.');
+    throw new Error('OPENAI_API_KEY is not set. Personality profile cannot be generated.');
   }
 
-  const anthropic = new Anthropic({ apiKey, baseURL: 'https://api.anthropic.com' });
+  const openai = new OpenAI({ apiKey });
 
   const userPrompt = buildUserPrompt(entries);
 
-  const message = await anthropic.messages.create({
+  const response = await openai.chat.completions.create({
     model: MODEL,
-    max_tokens: MAX_TOKENS,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
+    max_completion_tokens: MAX_COMPLETION_TOKENS,
+    temperature: 1,
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: userPrompt },
+    ],
   });
 
-  const text = extractText(message);
+  const text = response.choices[0]?.message?.content ?? '';
+  if (!text) {
+    throw new Error('Empty response from OpenAI');
+  }
 
   return parseResponse(text);
 }
@@ -91,16 +97,6 @@ function buildUserPrompt(entries: OnboardingEntry[]): string {
   );
 }
 
-function extractText(
-  message: Anthropic.Messages.Message,
-): string {
-  const block = message.content[0];
-  if (!block || block.type !== 'text') {
-    throw new Error(`Unexpected response type: ${block?.type ?? 'empty'}`);
-  }
-  return block.text;
-}
-
 function parseResponse(text: string): PersonalityProfileResult {
   // Response'u temizle (bazen ```json ... ``` içinde gelebilir)
   let cleaned = text.trim();
@@ -115,7 +111,7 @@ function parseResponse(text: string): PersonalityProfileResult {
     parsed = JSON.parse(cleaned);
   } catch {
     throw new Error(
-      `Failed to parse Claude response as JSON. Raw: ${text.slice(0, 300)}`,
+      `Failed to parse response as JSON. Raw: ${text.slice(0, 300)}`,
     );
   }
 
