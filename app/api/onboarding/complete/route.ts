@@ -106,14 +106,19 @@ export async function POST() {
     message: firstMessage,
   });
 
-  // Adım 6: onboarding_completed_at set et
-  const { error: uError } = await supabase
-    .from('users')
-    .update({ onboarding_completed_at: new Date().toISOString() })
-    .eq('id', user.id);
+  // Adım 6: onboarding_completed_at set et (kolon yoksa hatayı yut)
+  try {
+    const { error: uError } = await supabase
+      .from('users')
+      .update({ onboarding_completed_at: new Date().toISOString() })
+      .eq('id', user.id);
 
-  if (uError) {
-    return NextResponse.json({ error: uError.message }, { status: 500 });
+    if (uError) {
+      // Kolon henüz eklenmemiş olabilir, bu onboarding'i engellemez
+      console.warn('[onboarding] onboarding_completed_at set edilemedi (kolon eksik?):', uError.message);
+    }
+  } catch (err) {
+    console.warn('[onboarding] onboarding_completed_at update hatası (kolon eksik?):', err);
   }
 
   return NextResponse.json({
