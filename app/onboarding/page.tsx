@@ -172,7 +172,7 @@ export default function OnboardingPage() {
 
   if (completed) {
     return (
-      <div className="flex min-h-full items-center justify-center bg-zinc-50 dark:bg-black">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-black dark:text-zinc-50">
             🎉 Tamamlandı!
@@ -185,7 +185,7 @@ export default function OnboardingPage() {
 
   if (error && !currentQuestion) {
     return (
-      <div className="flex min-h-full items-center justify-center bg-zinc-50 dark:bg-black">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
         <div className="max-w-sm text-center">
           <p className="text-red-600 dark:text-red-400">{error}</p>
         </div>
@@ -195,7 +195,7 @@ export default function OnboardingPage() {
 
   if (!currentQuestion) {
     return (
-      <div className="flex min-h-full items-center justify-center bg-zinc-50 dark:bg-black">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
         <p className="text-sm text-zinc-500">Tüm sorular cevaplandı.</p>
       </div>
     );
