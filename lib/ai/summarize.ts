@@ -62,7 +62,7 @@ export async function buildPersonalityProfile(
     throw new Error('ANTHROPIC_API_KEY is not set. Personality profile cannot be generated.');
   }
 
-  const anthropic = new Anthropic({ apiKey });
+  const anthropic = new Anthropic({ apiKey, baseURL: 'https://api.anthropic.com' });
 
   const userPrompt = buildUserPrompt(entries);
 
