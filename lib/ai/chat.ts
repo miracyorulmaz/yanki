@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { embedText } from './embed';
 
-const MODEL = 'gpt-4.1-mini';
+const MODEL = 'gpt-5.6-luna';
 const MAX_COMPLETION_TOKENS = 2048;
 const MATCH_COUNT = 10;
 
@@ -165,7 +165,7 @@ export async function generateReply(
   const response = await openai.chat.completions.create({
     model: MODEL,
     max_completion_tokens: MAX_COMPLETION_TOKENS,
-    temperature: 0.8,
+    temperature: 1,
     messages,
   });
 
